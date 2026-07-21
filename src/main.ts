@@ -453,6 +453,7 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 		addToggle('Strikethrough', 'showStrikethrough');
 		addToggle('Highlight', 'showHighlight');
 		addToggle('Link', 'showLink');
+		addToggle('Internal Link', 'showInternalLink');
 
 		// Block & List
 		addToggle('Bullet List', 'showBulletList');
