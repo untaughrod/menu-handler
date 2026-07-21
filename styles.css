@@ -20,3 +20,30 @@
 	/* Optional: A subtle blur effect for that modern glass UI look */
 	backdrop-filter: blur(4px);
 }
+
+.floating-menu-btn {
+	background: transparent;
+	border: none;
+	color: var(--icon-color);
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	padding: 6px;
+	display: flex; /* Centers the icon perfectly */
+	align-items: center;
+	justify-content: center;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+/* --- Hover Effects --- */
+.floating-menu-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--icon-color-hover);
+}
+
+/* --- Icon Sizing --- */
+.floating-menu-btn svg {
+	width: 18px;
+	height: 18px;
+}
