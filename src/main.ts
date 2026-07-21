@@ -4,7 +4,11 @@ export default class FloatingMenuPlugin extends Plugin {
 	menuEl: HTMLElement;
 
 	async onload() {
-		// 1. Create the container div
+		// 1. Create the container div (This was missing!)
+		this.menuEl = document.createElement('div');
+		this.menuEl.addClass('floating-context-menu');
+		document.body.appendChild(this.menuEl);
+
 		// Bold: wraps in **
 		this.createButton('bold', 'Bold', () => {
 			this.wrapText('**', '**');
@@ -43,6 +47,7 @@ export default class FloatingMenuPlugin extends Plugin {
 			this.menuEl.remove();
 		}
 	}
+
 	// Helper to wrap text or insert syntax at the cursor
 	wrapText(before: string, after: string) {
 		// 1. Get the currently active markdown view
