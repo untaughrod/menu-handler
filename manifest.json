@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "menu-handler",
+	"name": "Menu Handler",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Adds a contextual menu for easy note text modification.",
+	"author": "Thales Medeiros",
+	"authorUrl": "https://www.untaughrod.com/",
+	"fundingUrl": "https://ko-fi.com/untaughrod",
 	"isDesktopOnly": false
 }

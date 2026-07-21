@@ -1,8 +1,22 @@
-/*
+.floating-context-menu {
+	/* --- Positioning --- */
+	position: fixed;
+	bottom: 40px; /* Distance from the bottom of the screen */
+	left: 50%; /* Move to the middle */
+	transform: translateX(-50%); /* Perfect centering trick */
+	z-index: 999; /* Keep it on top of all notes and panes */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+	/* --- Aesthetics & Layout --- */
+	display: flex; /* Sets us up to align buttons in a row later */
+	gap: 8px; /* Space between future buttons */
+	padding: 8px 12px;
 
-If your plugin does not need CSS, delete this file.
+	/* Using Obsidian's native variables for seamless theme integration */
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: var(--shadow-l);
 
-*/
+	/* Optional: A subtle blur effect for that modern glass UI look */
+	backdrop-filter: blur(4px);
+}
