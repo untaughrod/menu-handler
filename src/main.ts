@@ -7,7 +7,7 @@ import {
 	MarkdownView,
 } from 'obsidian';
 
-// 1. Define the settings our plugin will use
+// 1. Define settings, adding our two new options
 interface FloatingMenuSettings {
 	showBold: boolean;
 	showItalic: boolean;
@@ -16,9 +16,10 @@ interface FloatingMenuSettings {
 	showLink: boolean;
 	showCallout: boolean;
 	showHr: boolean;
+	hideWhenNoSelection: boolean;
+	floatNearCursor: boolean;
 }
 
-// 2. Set the default settings (everything ON by default)
 const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showBold: true,
 	showItalic: true,
@@ -27,6 +28,8 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showLink: true,
 	showCallout: true,
 	showHr: true,
+	hideWhenNoSelection: false, // Default to always showing
+	floatNearCursor: false, // Default to fixed at bottom
 };
 
 export default class FloatingMenuPlugin extends Plugin {
@@ -34,27 +37,81 @@ export default class FloatingMenuPlugin extends Plugin {
 	menuEl: HTMLElement;
 
 	async onload() {
-		// Load the settings first
 		await this.loadSettings();
-
-		// Add the settings tab to Obsidian
 		this.addSettingTab(new FloatingMenuSettingTab(this.app, this));
 
-		// Create the container div
 		this.menuEl = document.createElement('div');
 		this.menuEl.addClass('floating-context-menu');
 		document.body.appendChild(this.menuEl);
 
-		// Render the buttons based on current settings
 		this.renderMenu();
+
+		// 2. Register Event Listeners to track when you highlight text
+		const updatePosition = () => {
+			// requestAnimationFrame ensures it runs smoothly after the browser finishes its layout calculations
+			requestAnimationFrame(() => this.updateMenuVisibilityAndPosition());
+		};
+
+		this.registerDomEvent(document, 'mouseup', updatePosition);
+		this.registerDomEvent(document, 'keyup', updatePosition);
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', updatePosition),
+		);
+
+		// Initial check when the plugin loads
+		updatePosition();
 	}
 
-	// 3. New function to build the menu dynamically
+	// 3. The brains behind the context and positioning
+	updateMenuVisibilityAndPosition() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+		// If no note is open, hide the menu completely
+		if (!view) {
+			this.menuEl.style.display = 'none';
+			return;
+		}
+
+		const editor = view.editor;
+		const selection = editor.getSelection();
+		const hasSelection = selection.length > 0;
+
+		// --- Visibility Logic ---
+		if (this.settings.hideWhenNoSelection && !hasSelection) {
+			this.menuEl.style.display = 'none';
+			return; // Stop here, no need to position an invisible menu
+		}
+
+		this.menuEl.style.display = 'flex';
+
+		// --- Positioning Logic ---
+		if (this.settings.floatNearCursor) {
+			// Get the exact screen coordinates of where the highlight starts
+			const cursorPos = editor.getCursor('from');
+			// Use 'as any' just in case older Obsidian typings throw a warning
+			const coords = (editor as any).coordsAtPos(cursorPos);
+
+			if (coords) {
+				// Clear the bottom anchoring
+				this.menuEl.style.bottom = 'auto';
+				// Place it 50 pixels above the text so it doesn't block what you are reading
+				this.menuEl.style.top = `${coords.top - 50}px`;
+				// Align it horizontally with the cursor
+				this.menuEl.style.left = `${coords.left}px`;
+				this.menuEl.style.transform = 'translateX(-50%)';
+			}
+		} else {
+			// Revert to fixed bottom-center positioning
+			this.menuEl.style.top = 'auto';
+			this.menuEl.style.bottom = '40px';
+			this.menuEl.style.left = '50%';
+			this.menuEl.style.transform = 'translateX(-50%)';
+		}
+	}
+
 	renderMenu() {
-		// Clear out any existing buttons first (useful when settings change)
 		this.menuEl.empty();
 
-		// Only create the button if the setting is true
 		if (this.settings.showBold)
 			this.createButton('bold', 'Bold', () =>
 				this.toggleFormat('**', '**'),
@@ -92,7 +149,11 @@ export default class FloatingMenuPlugin extends Plugin {
 		});
 		btn.setAttribute('aria-label', tooltip);
 		setIcon(btn, iconName);
-		btn.addEventListener('click', onClick);
+		btn.addEventListener('click', () => {
+			onClick();
+			// Force an update after a button is clicked so the menu adapts immediately
+			this.updateMenuVisibilityAndPosition();
+		});
 	}
 
 	onunload() {
@@ -113,6 +174,7 @@ export default class FloatingMenuPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	// --- Formatting Logic (Unchanged) ---
 	toggleFormat(before: string, after: string) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
@@ -169,7 +231,6 @@ export default class FloatingMenuPlugin extends Plugin {
 	insertCallout() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
-
 		const editor = view.editor;
 		const selection = editor.getSelection();
 
@@ -189,21 +250,17 @@ export default class FloatingMenuPlugin extends Plugin {
 		editor.focus();
 	}
 
-	// 4. Updated Horizontal Rule logic
 	insertHorizontalRule() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
-
 		const editor = view.editor;
 		const cursor = editor.getCursor();
 		const lineText = editor.getLine(cursor.line);
 
 		if (lineText.trim() === '') {
-			// Drop rule, add newline, move cursor down 1 line
 			editor.replaceRange(`---\n`, cursor);
 			editor.setCursor({ line: cursor.line + 1, ch: 0 });
 		} else {
-			// Pad with newlines so it doesn't break text, move cursor down 3 lines
 			editor.replaceRange(`\n\n---\n`, cursor);
 			editor.setCursor({ line: cursor.line + 3, ch: 0 });
 		}
@@ -211,7 +268,7 @@ export default class FloatingMenuPlugin extends Plugin {
 	}
 }
 
-// 5. The Settings Tab UI
+// 4. Update the Settings Menu UI
 class FloatingMenuSettingTab extends PluginSettingTab {
 	plugin: FloatingMenuPlugin;
 
@@ -224,12 +281,42 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Floating Menu Buttons' });
-		containerEl.createEl('p', {
-			text: 'Choose which buttons appear on your menu.',
-		});
+		// --- Behavior Settings ---
+		containerEl.createEl('h2', { text: 'Menu Behavior' });
 
-		// A helper function to create toggles quickly
+		new Setting(containerEl)
+			.setName('Hide when no text is selected')
+			.setDesc(
+				'If turned on, the menu will disappear completely unless you have text highlighted.',
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.hideWhenNoSelection)
+					.onChange(async (value) => {
+						this.plugin.settings.hideWhenNoSelection = value;
+						await this.plugin.saveSettings();
+						this.plugin.updateMenuVisibilityAndPosition();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Float near cursor')
+			.setDesc(
+				'If turned on, the menu will anchor itself dynamically above your text instead of locking to the bottom of the screen.',
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.floatNearCursor)
+					.onChange(async (value) => {
+						this.plugin.settings.floatNearCursor = value;
+						await this.plugin.saveSettings();
+						this.plugin.updateMenuVisibilityAndPosition();
+					}),
+			);
+
+		// --- Button Settings ---
+		containerEl.createEl('h2', { text: 'Menu Buttons' });
+
 		const addToggle = (name: string, key: keyof FloatingMenuSettings) => {
 			new Setting(containerEl).setName(name).addToggle((toggle) =>
 				toggle
@@ -238,9 +325,8 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 						// @ts-ignore
 						this.plugin.settings[key] = value;
 						await this.plugin.saveSettings();
-
-						// Instantly update the menu when a setting changes!
 						this.plugin.renderMenu();
+						this.plugin.updateMenuVisibilityAndPosition();
 					}),
 			);
 		};
