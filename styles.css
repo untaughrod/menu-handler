@@ -105,3 +105,14 @@
 .heading-dropdown-item:hover {
 	background-color: var(--background-modifier-hover);
 }
+
+/* Creates an invisible bridge to fix the hover "dead zone" */
+.heading-dropdown::after {
+	content: '';
+	position: absolute;
+	top: 100%; /* Attaches to the bottom of the dropdown menu */
+	left: 0;
+	right: 0;
+	height: 15px; /* Covers the 4px gap + extra safety padding */
+	background: transparent; /* Keeps it completely invisible */
+}
