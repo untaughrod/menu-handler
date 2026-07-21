@@ -19,6 +19,11 @@
 
 	/* Optional: A subtle blur effect for that modern glass UI look */
 	backdrop-filter: blur(4px);
+
+	transition:
+		top 0.15s ease,
+		left 0.15s ease,
+		opacity 0.15s ease;
 }
 
 .floating-menu-btn {
