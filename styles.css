@@ -52,3 +52,56 @@
 	width: 18px;
 	height: 18px;
 }
+
+/* --- Vertical Divider --- */
+.floating-menu-divider {
+	width: 1px;
+	background-color: var(--background-modifier-border);
+	margin: 4px 4px; /* Space on left and right */
+}
+
+/* --- Heading Dropdown Wrapper --- */
+.heading-wrapper {
+	position: relative;
+	display: flex;
+}
+
+/* The actual hidden menu that pops up */
+.heading-dropdown {
+	position: absolute;
+	bottom: calc(100% + 4px); /* Pushes it just above the main bar */
+	left: 50%;
+	transform: translateX(-50%);
+
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: var(--shadow-l);
+	padding: 4px;
+
+	display: none; /* Hidden by default */
+	flex-direction: column;
+	gap: 2px;
+	z-index: 1000;
+}
+
+/* Show the dropdown when the wrapper is hovered */
+.heading-wrapper:hover .heading-dropdown {
+	display: flex;
+}
+
+/* Text buttons inside the dropdown (H1, H2, etc) */
+.heading-dropdown-item {
+	background: transparent;
+	border: none;
+	color: var(--text-normal);
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	padding: 4px 12px;
+	font-weight: 600;
+	transition: background-color 0.15s ease;
+}
+
+.heading-dropdown-item:hover {
+	background-color: var(--background-modifier-hover);
+}
