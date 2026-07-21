@@ -13,6 +13,7 @@ interface FloatingMenuSettings {
 	showStrikethrough: boolean;
 	showHighlight: boolean;
 	showLink: boolean;
+	showInternalLink: boolean;
 	showCallout: boolean;
 	showHr: boolean;
 	showBulletList: boolean;
@@ -30,6 +31,7 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showStrikethrough: true,
 	showHighlight: true,
 	showLink: true,
+	showInternalLink: true,
 	showCallout: true,
 	showHr: true,
 	showBulletList: true,
@@ -128,6 +130,11 @@ export default class FloatingMenuPlugin extends Plugin {
 		if (this.settings.showLink)
 			this.createButton('link', 'Add Link', () =>
 				this.toggleFormat('[', ']()'),
+			);
+
+		if (this.settings.showInternalLink)
+			this.createButton('link-2', 'Internal Link', () =>
+				this.toggleFormat('[[', ']]'),
 			);
 
 		// --- Block & List Formatting ---
