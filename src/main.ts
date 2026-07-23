@@ -5,6 +5,7 @@ import {
 	Setting,
 	setIcon,
 	MarkdownView,
+	Notice,
 } from 'obsidian';
 
 interface FloatingMenuSettings {
@@ -23,6 +24,7 @@ interface FloatingMenuSettings {
 	showUndo: boolean;
 	hideWhenNoSelection: boolean;
 	floatNearCursor: boolean;
+	menuScale: number;
 }
 
 const DEFAULT_SETTINGS: FloatingMenuSettings = {
@@ -41,6 +43,7 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showUndo: true,
 	hideWhenNoSelection: false,
 	floatNearCursor: false,
+	menuScale: 1.0,
 };
 
 export default class FloatingMenuPlugin extends Plugin {
@@ -63,11 +66,23 @@ export default class FloatingMenuPlugin extends Plugin {
 
 		this.registerDomEvent(document, 'mouseup', updatePosition);
 		this.registerDomEvent(document, 'keyup', updatePosition);
+
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', updatePosition),
 		);
+		this.registerEvent(
+			this.app.workspace.on('layout-change', updatePosition),
+		);
+		this.registerDomEvent(window, 'resize', updatePosition);
 
 		updatePosition();
+	}
+
+	// THIS PREVENTS THE MENU DUPLICATION BUG
+	onunload() {
+		if (this.menuEl) {
+			this.menuEl.remove();
+		}
 	}
 
 	updateMenuVisibilityAndPosition() {
@@ -88,6 +103,16 @@ export default class FloatingMenuPlugin extends Plugin {
 
 		this.menuEl.style.display = 'flex';
 
+		// Apply dynamic scale to CSS variable
+		this.menuEl.style.setProperty(
+			'--menu-scale',
+			this.settings.menuScale.toString(),
+		);
+
+		// Constrain to the active note width
+		const viewRect = view.contentEl.getBoundingClientRect();
+		this.menuEl.style.maxWidth = `${viewRect.width - 40}px`;
+
 		if (this.settings.floatNearCursor) {
 			const cursorPos = editor.getCursor('from');
 			const coords = (editor as any).coordsAtPos(cursorPos);
@@ -99,9 +124,12 @@ export default class FloatingMenuPlugin extends Plugin {
 				this.menuEl.style.transform = 'translateX(-50%)';
 			}
 		} else {
+			// Anchor to the specific note's center, not the app window
+			const noteCenterX = viewRect.left + viewRect.width / 2;
+
 			this.menuEl.style.top = 'auto';
 			this.menuEl.style.bottom = '40px';
-			this.menuEl.style.left = '50%';
+			this.menuEl.style.left = `${noteCenterX}px`;
 			this.menuEl.style.transform = 'translateX(-50%)';
 		}
 	}
@@ -109,7 +137,6 @@ export default class FloatingMenuPlugin extends Plugin {
 	renderMenu() {
 		this.menuEl.empty();
 
-		// --- Standard Formatting ---
 		if (this.settings.showHeading) this.createHeadingDropdown();
 		if (this.settings.showBold)
 			this.createButton('bold', 'Bold', () =>
@@ -137,14 +164,13 @@ export default class FloatingMenuPlugin extends Plugin {
 				this.toggleFormat('[[', ']]'),
 			);
 
-		// --- Block & List Formatting ---
 		if (this.settings.showBulletList)
 			this.createButton('list', 'Bullet List', () =>
 				this.toggleLinePrefix('- '),
 			);
 		if (this.settings.showCheckbox)
 			this.createButton('check-square', 'Checkbox', () =>
-				this.toggleLinePrefix('- [ ] '),
+				this.toggleCheckbox(),
 			);
 		if (this.settings.showCallout)
 			this.createButton('message-square', 'Callout', () =>
@@ -155,7 +181,6 @@ export default class FloatingMenuPlugin extends Plugin {
 				this.insertHorizontalRule(),
 			);
 
-		// --- Divider & Actions (The Right Side) ---
 		const hasRightGroup =
 			this.settings.showClearFormat || this.settings.showUndo;
 		if (hasRightGroup) {
@@ -181,12 +206,9 @@ export default class FloatingMenuPlugin extends Plugin {
 		});
 	}
 
-	// Specialized function for the complex Heading button
 	createHeadingDropdown() {
-		// 1. Create the wrapper
 		const wrapper = this.menuEl.createEl('div', { cls: 'heading-wrapper' });
 
-		// 2. Create the main button
 		const mainBtn = wrapper.createEl('button', {
 			cls: 'floating-menu-btn',
 		});
@@ -197,17 +219,15 @@ export default class FloatingMenuPlugin extends Plugin {
 		setIcon(mainBtn, 'heading');
 		mainBtn.addEventListener('click', () => this.insertHeading(1));
 
-		// 3. Create the hidden dropdown menu
 		const dropdown = wrapper.createEl('div', { cls: 'heading-dropdown' });
 
-		// 4. Add H1-H6 buttons inside the dropdown
 		for (let i = 1; i <= 6; i++) {
 			const hBtn = dropdown.createEl('button', {
 				cls: 'heading-dropdown-item',
 				text: `H${i}`,
 			});
 			hBtn.addEventListener('click', (e) => {
-				e.stopPropagation(); // Prevents the main button click from firing
+				e.stopPropagation();
 				this.insertHeading(i);
 				this.updateMenuVisibilityAndPosition();
 			});
@@ -229,7 +249,6 @@ export default class FloatingMenuPlugin extends Plugin {
 	// --- Format Logic Helpers ---
 
 	toggleFormat(before: string, after: string) {
-		// (Unchanged from previous)
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
 		const editor = view.editor;
@@ -317,7 +336,6 @@ export default class FloatingMenuPlugin extends Plugin {
 		editor.focus();
 	}
 
-	// New: Handle Heading insertion/replacement
 	insertHeading(level: number) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
@@ -325,16 +343,12 @@ export default class FloatingMenuPlugin extends Plugin {
 		const cursor = editor.getCursor();
 		const lineText = editor.getLine(cursor.line);
 
-		// Strip out existing heading hashes if they exist
 		const strippedText = lineText.replace(/^#+\s/, '');
-
-		// Apply the new heading
 		const prefix = '#'.repeat(level) + ' ';
 		editor.setLine(cursor.line, prefix + strippedText);
 		editor.focus();
 	}
 
-	// New: Toggle list prefixes (Bullets or Checkboxes)
 	toggleLinePrefix(prefix: string) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
@@ -342,7 +356,6 @@ export default class FloatingMenuPlugin extends Plugin {
 		const selection = editor.getSelection();
 
 		if (selection) {
-			// Apply or remove from all selected lines
 			const lines = selection.split('\n');
 			const allHavePrefix = lines.every((line) =>
 				line.trimStart().startsWith(prefix),
@@ -354,7 +367,6 @@ export default class FloatingMenuPlugin extends Plugin {
 				.join('\n');
 			editor.replaceSelection(newText);
 		} else {
-			// Apply or remove from single line
 			const cursor = editor.getCursor();
 			const lineText = editor.getLine(cursor.line);
 			if (lineText.startsWith(prefix)) {
@@ -366,7 +378,36 @@ export default class FloatingMenuPlugin extends Plugin {
 		editor.focus();
 	}
 
-	// New: Clear all formatting using Regular Expressions
+	toggleCheckbox() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) return;
+		const editor = view.editor;
+		const selection = editor.getSelection();
+
+		const processLine = (line: string) => {
+			const trimmed = line.trimStart();
+			if (trimmed.startsWith('- [ ] ')) {
+				return line.replace('- [ ] ', '- [x] ');
+			} else if (trimmed.startsWith('- [x] ')) {
+				return line.replace('- [x] ', '- [ ] ');
+			} else if (trimmed.startsWith('- ')) {
+				return line.replace('- ', '- [ ] ');
+			} else {
+				return '- [ ] ' + line;
+			}
+		};
+
+		if (selection) {
+			const newText = selection.split('\n').map(processLine).join('\n');
+			editor.replaceSelection(newText);
+		} else {
+			const cursor = editor.getCursor();
+			const lineText = editor.getLine(cursor.line);
+			editor.setLine(cursor.line, processLine(lineText));
+		}
+		editor.focus();
+	}
+
 	clearFormatting() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
@@ -375,14 +416,13 @@ export default class FloatingMenuPlugin extends Plugin {
 
 		if (selection) {
 			const cleaned = selection
-				.replace(/(\*\*|__|==|~~|\*|_|`)/g, '') // Strips inline styles (bold, italic, code, highlight, strike)
-				.replace(/^(#+\s|> \s?|-\s\[.?\]\s|-\s|\d+\.\s)/gm, ''); // Strips prefixes (headings, blockquotes, lists)
+				.replace(/(\*\*|__|==|~~|\*|_|`)/g, '')
+				.replace(/^(#+\s|> \s?|-\s\[.?\]\s|-\s|\d+\.\s)/gm, '');
 			editor.replaceSelection(cleaned);
 		}
 		editor.focus();
 	}
 
-	// New: Trigger Obsidian's native Undo
 	triggerUndo() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (view) {
@@ -404,7 +444,38 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		containerEl.createEl('h2', { text: 'Plugin Actions' });
+
+		// NEW: Reload Button added directly to the Settings UI
+		new Setting(containerEl)
+			.setName('Reload Menu')
+			.setDesc(
+				'Click here to force reload the menu if it gets stuck, overlaps, or duplicates.',
+			)
+			.addButton((btn) =>
+				btn.setButtonText('Reload').onClick(() => {
+					this.plugin.renderMenu();
+					this.plugin.updateMenuVisibilityAndPosition();
+					new Notice('Floating Menu Reloaded!');
+				}),
+			);
+
 		containerEl.createEl('h2', { text: 'Menu Behavior' });
+
+		new Setting(containerEl)
+			.setName('Menu Size')
+			.setDesc('Adjust the size of the floating menu and its icons.')
+			.addSlider((slider) =>
+				slider
+					.setLimits(0.5, 2.0, 0.1)
+					.setValue(this.plugin.settings.menuScale)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.menuScale = value;
+						await this.plugin.saveSettings();
+						this.plugin.updateMenuVisibilityAndPosition();
+					}),
+			);
 
 		new Setting(containerEl)
 			.setName('Hide when no text is selected')

@@ -1,15 +1,14 @@
 .floating-context-menu {
 	/* --- Positioning --- */
 	position: fixed;
-	bottom: 40px; /* Distance from the bottom of the screen */
-	left: 50%; /* Move to the middle */
-	transform: translateX(-50%); /* Perfect centering trick */
 	z-index: 999; /* Keep it on top of all notes and panes */
 
 	/* --- Aesthetics & Layout --- */
-	display: flex; /* Sets us up to align buttons in a row later */
-	gap: 8px; /* Space between future buttons */
-	padding: 8px 12px;
+	display: flex;
+	flex-wrap: wrap; /* NEW: Allows buttons to wrap to the next line */
+	justify-content: center; /* Keeps the grid centered */
+	gap: 4px; /* Space between buttons and rows */
+	padding: 6px;
 
 	/* Using Obsidian's native variables for seamless theme integration */
 	background-color: var(--background-primary);
@@ -17,13 +16,15 @@
 	border-radius: var(--radius-m);
 	box-shadow: var(--shadow-l);
 
-	/* Optional: A subtle blur effect for that modern glass UI look */
+	/* A subtle blur effect for that modern glass UI look */
 	backdrop-filter: blur(4px);
 
+	/* NEW: max-width transition added for smooth resizing */
 	transition:
 		top 0.15s ease,
 		left 0.15s ease,
-		opacity 0.15s ease;
+		opacity 0.15s ease,
+		max-width 0.15s ease;
 }
 
 .floating-menu-btn {
@@ -32,8 +33,11 @@
 	color: var(--icon-color);
 	cursor: pointer;
 	border-radius: var(--radius-s);
-	padding: 6px;
-	display: flex; /* Centers the icon perfectly */
+
+	/* NEW: Tied padding to the scaling variable */
+	padding: calc(6px * var(--menu-scale, 1)) calc(8px * var(--menu-scale, 1));
+
+	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition:
@@ -49,15 +53,16 @@
 
 /* --- Icon Sizing --- */
 .floating-menu-btn svg {
-	width: 18px;
-	height: 18px;
+	/* NEW: Tied icon size to the scaling variable */
+	width: calc(18px * var(--menu-scale, 1));
+	height: calc(18px * var(--menu-scale, 1));
 }
 
 /* --- Vertical Divider --- */
 .floating-menu-divider {
 	width: 1px;
 	background-color: var(--background-modifier-border);
-	margin: 4px 4px; /* Space on left and right */
+	margin: 4px 4px;
 }
 
 /* --- Heading Dropdown Wrapper --- */
@@ -69,7 +74,7 @@
 /* The actual hidden menu that pops up */
 .heading-dropdown {
 	position: absolute;
-	bottom: calc(100% + 4px); /* Pushes it just above the main bar */
+	bottom: calc(100% + 4px);
 	left: 50%;
 	transform: translateX(-50%);
 
@@ -79,18 +84,16 @@
 	box-shadow: var(--shadow-l);
 	padding: 4px;
 
-	display: none; /* Hidden by default */
+	display: none;
 	flex-direction: column;
 	gap: 2px;
 	z-index: 1000;
 }
 
-/* Show the dropdown when the wrapper is hovered */
 .heading-wrapper:hover .heading-dropdown {
 	display: flex;
 }
 
-/* Text buttons inside the dropdown (H1, H2, etc) */
 .heading-dropdown-item {
 	background: transparent;
 	border: none;
@@ -106,13 +109,13 @@
 	background-color: var(--background-modifier-hover);
 }
 
-/* Creates an invisible bridge to fix the hover "dead zone" */
+/* Invisible bridge to fix the hover "dead zone" */
 .heading-dropdown::after {
 	content: '';
 	position: absolute;
-	top: 100%; /* Attaches to the bottom of the dropdown menu */
+	top: 100%;
 	left: 0;
 	right: 0;
-	height: 15px; /* Covers the 4px gap + extra safety padding */
-	background: transparent; /* Keeps it completely invisible */
+	height: 15px;
+	background: transparent;
 }
