@@ -21,6 +21,7 @@ interface FloatingMenuSettings {
 	showCheckbox: boolean;
 	showHeading: boolean;
 	showFold: boolean;
+	showThemeToggle: boolean;
 	showClearFormat: boolean;
 	showUndo: boolean;
 	hideWhenNoSelection: boolean;
@@ -41,6 +42,7 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showCheckbox: true,
 	showHeading: true,
 	showFold: true,
+	showThemeToggle: true,
 	showClearFormat: true,
 	showUndo: true,
 	hideWhenNoSelection: false,
@@ -181,6 +183,11 @@ export default class FloatingMenuPlugin extends Plugin {
 		if (this.settings.showHr)
 			this.createButton('minus', 'Horizontal Rule', () =>
 				this.insertHorizontalRule(),
+			);
+
+		if (this.settings.showThemeToggle)
+			this.createButton('sun', 'Toggle Light/Dark Mode', () =>
+				this.toggleTheme(),
 			);
 
 		const hasRightGroup =
@@ -448,6 +455,21 @@ export default class FloatingMenuPlugin extends Plugin {
 			view.editor.focus();
 		}
 	}
+
+	toggleTheme() {
+		// Check if the app body currently has the dark mode class
+		const isDarkMode = document.body.classList.contains('theme-dark');
+
+		if (isDarkMode) {
+			// If it's dark, switch to light
+			// @ts-ignore
+			this.app.commands.executeCommandById('theme:use-light');
+		} else {
+			// If it's light, switch to dark
+			// @ts-ignore
+			this.app.commands.executeCommandById('theme:use-dark');
+		}
+	}
 }
 
 class FloatingMenuSettingTab extends PluginSettingTab {
@@ -554,5 +576,6 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 		addToggle('Clear Formatting', 'showClearFormat');
 		addToggle('Toggle Fold', 'showFold');
 		addToggle('Undo', 'showUndo');
+		addToggle('Toggle Theme', 'showThemeToggle');
 	}
 }
