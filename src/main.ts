@@ -20,6 +20,7 @@ interface FloatingMenuSettings {
 	showBulletList: boolean;
 	showCheckbox: boolean;
 	showHeading: boolean;
+	showFold: boolean;
 	showClearFormat: boolean;
 	showUndo: boolean;
 	hideWhenNoSelection: boolean;
@@ -39,6 +40,7 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 	showBulletList: true,
 	showCheckbox: true,
 	showHeading: true,
+	showFold: true,
 	showClearFormat: true,
 	showUndo: true,
 	hideWhenNoSelection: false,
@@ -188,6 +190,10 @@ export default class FloatingMenuPlugin extends Plugin {
 			if (this.settings.showClearFormat)
 				this.createButton('eraser', 'Clear Formatting', () =>
 					this.clearFormatting(),
+				);
+			if (this.settings.showFold)
+				this.createButton('chevron-down', 'Toggle Fold', () =>
+					this.toggleFold(),
 				);
 			if (this.settings.showUndo)
 				this.createButton('undo', 'Undo', () => this.triggerUndo());
@@ -423,6 +429,18 @@ export default class FloatingMenuPlugin extends Plugin {
 		editor.focus();
 	}
 
+	toggleFold() {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (view) {
+			// 1. Give focus BACK to the editor first so Obsidian knows where the cursor is
+			view.editor.focus();
+
+			// 2. Now execute the native fold command
+			// @ts-ignore
+			this.app.commands.executeCommandById('editor:toggle-fold');
+		}
+	}
+
 	triggerUndo() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (view) {
@@ -534,6 +552,7 @@ class FloatingMenuSettingTab extends PluginSettingTab {
 
 		// Actions
 		addToggle('Clear Formatting', 'showClearFormat');
+		addToggle('Toggle Fold', 'showFold');
 		addToggle('Undo', 'showUndo');
 	}
 }
