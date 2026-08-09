@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "menu-handler",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Adds a contextual menu for easy note text modification.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

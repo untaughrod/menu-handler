@@ -63,7 +63,7 @@ Markdown Views Only: The menu is tied to the MarkdownView API. It will not appea
 
 Hardcoded Callout: The Callout button currently defaults to inserting an [!INFO] callout. Custom callout types are not yet selectable from the menu.
 
-Mobile Support: The plugin relies on desktop mouseup and keyup event listeners. Touch interactions on mobile devices have not been fully optimized and may result in inconsistent menu positioning.
+Desktop Only: The plugin relies on desktop mouseup and keyup event listeners and is marked as desktop-only in its manifest, so it will not load on Obsidian mobile. Mobile touch support may be added in a future release.
 
 Positioning on Large Selections: In "Float near cursor" mode, the menu anchors to the from coordinate of your selection. If you highlight a massive multi-page block of text, the menu will jump to the top of that selection, which may be off-screen.
 
