@@ -91,22 +91,42 @@
 }
 
 .heading-wrapper:hover .heading-dropdown {
+	/* Show dropdown on hover */
 	display: flex;
+}
+
+/* Add a small hover indicator below the heading button */
+.heading-dropdown::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	height: 8px;
+	background: transparent;
 }
 
 .heading-dropdown-item {
 	background: transparent;
 	border: none;
-	color: var(--text-normal);
+	color: var(--icon-color);
 	cursor: pointer;
 	border-radius: var(--radius-s);
-	padding: 4px 12px;
-	font-weight: 600;
-	transition: background-color 0.15s ease;
+	padding: 6px 12px;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
 }
 
 .heading-dropdown-item:hover {
 	background-color: var(--background-modifier-hover);
+	color: var(--icon-color-hover);
+}
+
+/* Ensure icons in dropdown are properly sized */
+.heading-dropdown-item svg {
+	width: 20px;
+	height: 20px;
 }
 
 /* Invisible bridge to fix the hover "dead zone" */

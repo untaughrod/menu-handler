@@ -237,8 +237,9 @@ export default class FloatingMenuPlugin extends Plugin {
 		for (let i = 1; i <= 6; i++) {
 			const hBtn = dropdown.createEl('button', {
 				cls: 'heading-dropdown-item',
-				text: `H${i}`,
 			});
+			hBtn.setAttribute('aria-label', `Heading ${i} (${['H1', 'H2', 'H3', 'H4', 'H5', 'H6'][i - 1]})`);
+			setIcon(hBtn, `heading-${i}`);
 			hBtn.addEventListener('click', (e) => {
 				e.stopPropagation();
 				this.insertHeading(i);
