@@ -1,58 +1,13 @@
+import { Plugin, setIcon, MarkdownView } from 'obsidian';
 import {
-	App,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	setIcon,
-	MarkdownView,
-	Notice,
-} from 'obsidian';
-
-interface FloatingMenuSettings {
-	showBold: boolean;
-	showItalic: boolean;
-	showStrikethrough: boolean;
-	showHighlight: boolean;
-	showLink: boolean;
-	showInternalLink: boolean;
-	showCallout: boolean;
-	showHr: boolean;
-	showBulletList: boolean;
-	showCheckbox: boolean;
-	showHeading: boolean;
-	showFold: boolean;
-	showThemeToggle: boolean;
-	showClearFormat: boolean;
-	showUndo: boolean;
-	hideWhenNoSelection: boolean;
-	floatNearCursor: boolean;
-	menuScale: number;
-}
-
-const DEFAULT_SETTINGS: FloatingMenuSettings = {
-	showBold: true,
-	showItalic: true,
-	showStrikethrough: true,
-	showHighlight: true,
-	showLink: true,
-	showInternalLink: true,
-	showCallout: true,
-	showHr: true,
-	showBulletList: true,
-	showCheckbox: true,
-	showHeading: true,
-	showFold: true,
-	showThemeToggle: true,
-	showClearFormat: true,
-	showUndo: true,
-	hideWhenNoSelection: false,
-	floatNearCursor: false,
-	menuScale: 1.0,
-};
+	FloatingMenuSettings,
+	DEFAULT_SETTINGS,
+	FloatingMenuSettingTab,
+} from './settings';
 
 export default class FloatingMenuPlugin extends Plugin {
-	settings: FloatingMenuSettings;
-	menuEl: HTMLElement;
+	settings!: FloatingMenuSettings;
+	menuEl!: HTMLElement;
 	themeBtn: HTMLElement | null = null;
 
 	async onload() {
@@ -505,113 +460,5 @@ export default class FloatingMenuPlugin extends Plugin {
 			'aria-label',
 			isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
 		);
-	}
-}
-
-class FloatingMenuSettingTab extends PluginSettingTab {
-	plugin: FloatingMenuPlugin;
-
-	constructor(app: App, plugin: FloatingMenuPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
-
-		containerEl.createEl('h2', { text: 'Plugin Actions' });
-
-		// NEW: Reload Button added directly to the Settings UI
-		new Setting(containerEl)
-			.setName('Reload Menu')
-			.setDesc(
-				'Click here to force reload the menu if it gets stuck, overlaps, or duplicates.',
-			)
-			.addButton((btn) =>
-				btn.setButtonText('Reload').onClick(() => {
-					this.plugin.renderMenu();
-					this.plugin.updateMenuVisibilityAndPosition();
-					new Notice('Floating Menu Reloaded!');
-				}),
-			);
-
-		containerEl.createEl('h2', { text: 'Menu Behavior' });
-
-		new Setting(containerEl)
-			.setName('Menu Size')
-			.setDesc('Adjust the size of the floating menu and its icons.')
-			.addSlider((slider) =>
-				slider
-					.setLimits(0.5, 2.0, 0.1)
-					.setValue(this.plugin.settings.menuScale)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.menuScale = value;
-						await this.plugin.saveSettings();
-						this.plugin.updateMenuVisibilityAndPosition();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName('Hide when no text is selected')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.hideWhenNoSelection)
-					.onChange(async (value) => {
-						this.plugin.settings.hideWhenNoSelection = value;
-						await this.plugin.saveSettings();
-						this.plugin.updateMenuVisibilityAndPosition();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName('Float near cursor')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.floatNearCursor)
-					.onChange(async (value) => {
-						this.plugin.settings.floatNearCursor = value;
-						await this.plugin.saveSettings();
-						this.plugin.updateMenuVisibilityAndPosition();
-					}),
-			);
-
-		containerEl.createEl('h2', { text: 'Menu Buttons' });
-
-		const addToggle = (name: string, key: keyof FloatingMenuSettings) => {
-			new Setting(containerEl).setName(name).addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings[key] as boolean)
-					.onChange(async (value) => {
-						// @ts-ignore
-						this.plugin.settings[key] = value;
-						await this.plugin.saveSettings();
-						this.plugin.renderMenu();
-						this.plugin.updateMenuVisibilityAndPosition();
-					}),
-			);
-		};
-
-		// Standard
-		addToggle('Heading (H1-H6)', 'showHeading');
-		addToggle('Bold', 'showBold');
-		addToggle('Italic', 'showItalic');
-		addToggle('Strikethrough', 'showStrikethrough');
-		addToggle('Highlight', 'showHighlight');
-		addToggle('Link', 'showLink');
-		addToggle('Internal Link', 'showInternalLink');
-
-		// Block & List
-		addToggle('Bullet List', 'showBulletList');
-		addToggle('Checkbox', 'showCheckbox');
-		addToggle('Callout', 'showCallout');
-		addToggle('Horizontal Rule', 'showHr');
-
-		// Actions
-		addToggle('Clear Formatting', 'showClearFormat');
-		addToggle('Toggle Fold', 'showFold');
-		addToggle('Undo', 'showUndo');
-		addToggle('Toggle Theme', 'showThemeToggle');
 	}
 }
