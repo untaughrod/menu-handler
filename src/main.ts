@@ -207,7 +207,7 @@ export default class FloatingMenuPlugin extends Plugin {
 					this.clearFormatting(),
 				);
 			if (this.settings.showFold)
-				this.createButton('chevron-down', 'Toggle Fold', () =>
+				this.createButton('list-chevrons-down-up', 'Toggle Fold', () =>
 					this.toggleFold(),
 				);
 			if (this.settings.showUndo)
@@ -448,14 +448,31 @@ export default class FloatingMenuPlugin extends Plugin {
 
 	toggleFold() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (view) {
-			// 1. Give focus BACK to the editor first so Obsidian knows where the cursor is
-			view.editor.focus();
+		if (!view) return;
+		const editor = view.editor;
 
-			// 2. Now execute the native fold command
-			// @ts-ignore
-			this.app.commands.executeCommandById('editor:toggle-fold');
+		// 1. Give focus BACK to the editor first so Obsidian knows where the cursor is
+		editor.focus();
+
+		// 2. The native fold command only acts on the cursor's exact line. If the
+		// cursor is on a plain line inside a section, walk upward to the nearest
+		// heading so the command folds the section the cursor is currently under.
+		const cursor = editor.getCursor();
+		let headingLine = -1;
+		for (let line = cursor.line; line >= 0; line--) {
+			if (/^#{1,6}\s/.test(editor.getLine(line))) {
+				headingLine = line;
+				break;
+			}
 		}
+
+		if (headingLine !== -1 && headingLine !== cursor.line) {
+			editor.setCursor({ line: headingLine, ch: 0 });
+		}
+
+		// 3. Now execute the native fold command against the resolved heading line
+		// @ts-ignore
+		this.app.commands.executeCommandById('editor:toggle-fold');
 	}
 
 	triggerUndo() {

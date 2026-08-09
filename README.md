@@ -25,7 +25,7 @@ The menu provides instant access to common formatting actions, and includes smar
 
 **Light/Dark Mode Toggle:** A one-click button to switch Obsidian between its light and dark color schemes. The icon reflects the current mode (a sun while in light mode, a moon while in dark mode) and stays in sync even when you change the theme from Obsidian's settings or another plugin.
 
-**Fold Toggle:** Collapse or expand the heading or list section at your cursor using Obsidian's native fold command.
+**Fold Toggle:** Collapse or expand the heading section your cursor is currently in. You no longer need to click directly on the heading line — the button walks upward from the cursor to find the nearest heading (or subheading) and folds that whole section. If there is no heading above the cursor, it falls back to folding the foldable item on the current line.
 
 **Safety Actions:** Dedicated Undo and Clear Formatting buttons isolated on the right side of the menu to prevent accidental clicks. Clear Formatting intelligently strips Markdown symbols (bold, lists, blockquotes, etc.) from your selection.
 
