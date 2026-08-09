@@ -2,7 +2,7 @@
 	"id": "menu-handler",
 	"name": "Menu Handler",
 	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
+	"minAppVersion": "1.13.4",
 	"description": "Adds a contextual menu for easy note text modification.",
 	"author": "Thales Medeiros",
 	"authorUrl": "https://www.untaughrod.com/",
