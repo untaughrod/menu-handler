@@ -17,11 +17,15 @@ The menu provides instant access to common formatting actions, and includes smar
 
 **Smart Checkboxes:** Intelligent toggling that detects the current line state. It will add a new checkbox, upgrade a standard bullet to a checkbox, or check/uncheck an existing box (- [ ] ↔ - [x]).
 
-**Heading Dropdown:** Click the heading icon to instantly apply an H1, or hover over it to reveal a seamless dropdown for H1–H6.
+**Heading Dropdown:** Click the heading icon to instantly apply an H1, or hover over it to reveal a seamless vertical sub-menu for H1–H6. Each level is shown with its native Lucide heading icon for quick visual recognition.
 
 **Link Insertion:** Dedicated buttons for both External Links ([]()) and Internal Obsidian Links ([[]]).
 
 **Block Elements:** Insert Info Callouts (> [!INFO]), Bullet Lists, and Horizontal Rules.
+
+**Light/Dark Mode Toggle:** A one-click button to switch Obsidian between its light and dark color schemes. The icon reflects the current mode (a sun while in light mode, a moon while in dark mode) and stays in sync even when you change the theme from Obsidian's settings or another plugin.
+
+**Fold Toggle:** Collapse or expand the heading or list section at your cursor using Obsidian's native fold command.
 
 **Safety Actions:** Dedicated Undo and Clear Formatting buttons isolated on the right side of the menu to prevent accidental clicks. Clear Formatting intelligently strips Markdown symbols (bold, lists, blockquotes, etc.) from your selection.
 
@@ -75,7 +79,7 @@ Download the latest release (main.js, manifest.json, and styles.css) from the Re
 
 Go to your Obsidian vault's .obsidian/plugins/ directory.
 
-Create a new folder named floating-context-menu.
+Create a new folder named menu-handler.
 
 Place the downloaded files inside this new folder.
 

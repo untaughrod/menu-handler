@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: FloatingMenuSettings = {
 export default class FloatingMenuPlugin extends Plugin {
 	settings: FloatingMenuSettings;
 	menuEl: HTMLElement;
+	themeBtn: HTMLElement | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -76,6 +77,10 @@ export default class FloatingMenuPlugin extends Plugin {
 		);
 		this.registerEvent(
 			this.app.workspace.on('layout-change', updatePosition),
+		);
+		// Keep the theme button icon in sync if the mode changes from elsewhere
+		this.registerEvent(
+			this.app.workspace.on('css-change', () => this.updateThemeIcon()),
 		);
 		this.registerDomEvent(window, 'resize', updatePosition);
 
@@ -140,6 +145,7 @@ export default class FloatingMenuPlugin extends Plugin {
 
 	renderMenu() {
 		this.menuEl.empty();
+		this.themeBtn = null;
 
 		if (this.settings.showHeading) this.createHeadingDropdown();
 		if (this.settings.showBold)
@@ -185,10 +191,12 @@ export default class FloatingMenuPlugin extends Plugin {
 				this.insertHorizontalRule(),
 			);
 
-		if (this.settings.showThemeToggle)
-			this.createButton('sun', 'Toggle Light/Dark Mode', () =>
+		if (this.settings.showThemeToggle) {
+			this.themeBtn = this.createButton('sun', 'Toggle Light/Dark Mode', () =>
 				this.toggleTheme(),
 			);
+			this.updateThemeIcon();
+		}
 
 		const hasRightGroup =
 			this.settings.showClearFormat || this.settings.showUndo;
@@ -217,6 +225,7 @@ export default class FloatingMenuPlugin extends Plugin {
 			onClick();
 			this.updateMenuVisibilityAndPosition();
 		});
+		return btn;
 	}
 
 	createHeadingDropdown() {
@@ -461,15 +470,24 @@ export default class FloatingMenuPlugin extends Plugin {
 		// Check if the app body currently has the dark mode class
 		const isDarkMode = document.body.classList.contains('theme-dark');
 
-		if (isDarkMode) {
-			// If it's dark, switch to light
-			// @ts-ignore
-			this.app.commands.executeCommandById('theme:use-light');
-		} else {
-			// If it's light, switch to dark
-			// @ts-ignore
-			this.app.commands.executeCommandById('theme:use-dark');
-		}
+		// Obsidian's base color scheme is set via the internal changeTheme API.
+		// 'moonstone' = light, 'obsidian' = dark. This also persists the choice.
+		// @ts-ignore - changeTheme is an internal Obsidian API, not in the public typings
+		this.app.changeTheme(isDarkMode ? 'moonstone' : 'obsidian');
+
+		// Update the button icon to reflect the new mode
+		this.updateThemeIcon();
+	}
+
+	updateThemeIcon() {
+		if (!this.themeBtn) return;
+		const isDarkMode = document.body.classList.contains('theme-dark');
+		// Reflect the current mode: moon while dark, sun while light.
+		setIcon(this.themeBtn, isDarkMode ? 'moon' : 'sun');
+		this.themeBtn.setAttribute(
+			'aria-label',
+			isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+		);
 	}
 }
 
